@@ -13,8 +13,6 @@ extern int errno;
 int port;
 
 bool conectat = false;
-bool afisare = true;
-bool destinatar_gasit = false;
 
 void *receptor(void * arg);
 
@@ -30,9 +28,9 @@ void meniu()
     printf("   afisare mesajele offline\n");
     printf("   afisare istoric conversatie\n");
     printf("   trimite mesaj\n");
-    printf("   raspunde la un mesaj\n");
+    printf("   raspunde\n");
     printf("   schimbare parola\n");
-    printf("   afisare utilizatori online\n");
+    printf("   afisare data trimitere mesaj\n");
     printf("   iesire\n");
     printf("Pentru a revedea comenzile posibile apelati comanda : meniu\n");
 }
@@ -55,7 +53,11 @@ int main(int argc, char *argv[])
     printf("   raspunde la un mesaj\n");
     printf("   schimbare parola\n");
     printf("   afisare utilizatori online\n");
+    printf("   afisare data trimitere mesaj\n");
+    printf("   afisare ora trimitere mesaj\n");
     printf("   iesire\n");
+    printf("   blocare\n");
+    printf("   deblocare\n");
     printf("Pentru a revedea comenzile posibile apelati comanda : menu\n");
     fflush(stdout);
 
@@ -74,6 +76,8 @@ int main(int argc, char *argv[])
     char nume_utilizator_destinatie[100];
     char nume_prieten[100];
     char mesaj[2000];
+    char id_mesaj[100];
+    char nume_utilizator_blocat[100];
 
     if(argc != 3)
     {
@@ -102,8 +106,6 @@ int main(int argc, char *argv[])
 
     while(1)
     {
-        if(afisare == true)
-        {
         sleep(1);
         printf("[client]Introduceti comanda dorita: ");
 
@@ -113,39 +115,35 @@ int main(int argc, char *argv[])
         cod_write = write(server_descriptor, &comanda, strlen(comanda));    
         if(cod_write == -1)
         {
-             perror("[client]Eroare la write() catre server.\n");
-             exit(EXIT_FAILURE);
+            perror("[client]Eroare la write() catre server.\n");
+            exit(EXIT_FAILURE);
         }
 
        if(strcmp(comanda, "inregistrare") == 0)
         {
             do{
-
                 memset(nume_utilizator, 0, sizeof(nume_utilizator));
                 printf("[client]Introduceti un nume de utilizator: ");
                 fflush(stdout);
-
                 fgets(nume_utilizator, sizeof(nume_utilizator), stdin);
                 nume_utilizator[strlen(nume_utilizator)-1] = '\0';
- 
                 cod_write = write(server_descriptor, &nume_utilizator, strlen(nume_utilizator));
                 if(cod_write == -1)
                 {
-                     perror("[client]Eroare la write() catre server.\n");
-                     exit(EXIT_FAILURE);
+                    perror("[client]Eroare la write() catre server.\n");
+                    exit(EXIT_FAILURE);
                 }
 
                 memset(raspuns, 0, sizeof(raspuns));
                 cod_read = read(server_descriptor, &raspuns, sizeof(raspuns));
                 if(cod_read == -1)
                 {
-                     perror("[client]Eroare la read() de la server\n");
-                     exit(EXIT_FAILURE);
+                    perror("[client]Eroare la read() de la server\n");
+                    exit(EXIT_FAILURE);
                 }
                 raspuns[strlen(raspuns)] = '\0';
-                printf("[client]%s\n", raspuns);
+                printf("[server]%s\n", raspuns);
                 fflush(stdout);
-
             }while(strcmp(raspuns, "Numele de utilizator ales este disponibil.") != 0);
 
             do{
@@ -167,11 +165,11 @@ int main(int argc, char *argv[])
                 cod_read = read(server_descriptor, &raspuns, sizeof(raspuns));
                 if(cod_read == -1)
                 {
-                     perror("[client]Eroare la read() de la server.n");
-                     exit(EXIT_FAILURE);
+                    perror("[client]Eroare la read() de la server.n");
+                    exit(EXIT_FAILURE);
                 }
                 raspuns[strlen(raspuns)] = '\0';
-                printf("[client]%s\n", raspuns); 
+                printf("[server]%s\n", raspuns); 
                 fflush(stdout);
                 
             }while(strcmp(raspuns, "Ai introdus o parola care respecta regulile aplicatiei.") != 0);
@@ -188,8 +186,8 @@ int main(int argc, char *argv[])
                 cod_write = write(server_descriptor, &nr_telefon, strlen(nr_telefon));
                 if(cod_write == -1)
                 {
-                     perror("[client]Eroare la write() catre server.\n");
-                     exit(EXIT_FAILURE);
+                    perror("[client]Eroare la write() catre server.\n");
+                    exit(EXIT_FAILURE);
                 }
 
                 memset(raspuns, 0, sizeof(raspuns));
@@ -200,7 +198,7 @@ int main(int argc, char *argv[])
                     exit(EXIT_FAILURE);
                 }
                 raspuns[strlen(raspuns)] = '\0';
-                printf("[client]%s\n", raspuns);
+                printf("[server]%s\n", raspuns);
                 fflush(stdout);
  
             }while(strcmp(raspuns, "Numarul de telefon introdus este valid.") != 0);
@@ -214,22 +212,19 @@ int main(int argc, char *argv[])
                 exit(EXIT_FAILURE);
             }
             raspuns[strlen(raspuns)] = '\0';
-            printf("[client]%s\n", raspuns);
+            printf("[server]%s\n", raspuns);
             fflush(stdout);
+            clearBuffer();
         } else if(strcmp(comanda, "conectare") == 0)
         {
             if(conectat == false)
             {
-            
                 do{
-
                     memset(nume_utilizator, 0, sizeof(nume_utilizator));
                     printf("[client]Introduceti numele de utilizator: ");
                     fflush(stdout);
-
                     fgets(nume_utilizator, sizeof(nume_utilizator), stdin);
                     nume_utilizator[strlen(nume_utilizator)-1] = '\0';
- 
                     cod_write = write(server_descriptor, &nume_utilizator, strlen(nume_utilizator));
                     if(cod_write == -1)
                     {
@@ -245,9 +240,8 @@ int main(int argc, char *argv[])
                         exit(EXIT_FAILURE);
                     }
                     raspuns[strlen(raspuns)] = '\0';
-                    printf("[client]%s\n", raspuns);
+                    printf("[server]%s\n", raspuns);
                     fflush(stdout);
-
                 }while(strcmp(raspuns, "Numele de utilizator introdus este corect.") != 0);
 
 
@@ -255,10 +249,8 @@ int main(int argc, char *argv[])
                     memset(parola, 0, sizeof(parola));
                     printf("[client]Introduceti parola: ");
                     fflush(stdout);
-                
                     fgets(parola, sizeof(parola), stdin);
                     parola[strlen(parola)-1] = '\0';
-
                     cod_write = write(server_descriptor, &parola, strlen(parola));
                     if(cod_write == -1)
                     {
@@ -274,7 +266,7 @@ int main(int argc, char *argv[])
                         exit(EXIT_FAILURE);
                     }
                     raspuns[strlen(raspuns)] = '\0';
-                    printf("[client]%s\n", raspuns); 
+                    printf("[server]%s\n", raspuns); 
                     fflush(stdout);
 
                     if(strcmp(raspuns, "Parola introdusa este corecta.") != 0)
@@ -299,11 +291,8 @@ int main(int argc, char *argv[])
                             do{  
                                 memset(nr_telefon, 0, sizeof(nr_telefon));
                                 printf("[client]Introduceti numarul de telefon cu care s-a creat contul: ");
-        
-
                                 fgets(nr_telefon, sizeof(nr_telefon), stdin);
                                 nr_telefon[strlen(nr_telefon)] = '\0';
-
                                 cod_write = write(server_descriptor, &nr_telefon, strlen(nr_telefon));
                                 if(cod_write == -1)
                                 {
@@ -319,18 +308,14 @@ int main(int argc, char *argv[])
                                     exit(EXIT_FAILURE);
                                 }
                                 raspuns[strlen(raspuns)] = '\0';
-                                printf("[client]%s\n", raspuns);
+                                printf("[server]%s\n", raspuns);
                                 fflush(stdout);
-
                             }while(strcmp(raspuns, "Numarul de telefon este corect.") != 0);
 
                             memset(parola_noua, 0, sizeof(parola_noua));
                             printf("[client]Acum iti poti schimba parola! Introduceti o parola noua pentru actualizare: \n");
-
                             fscanf(stdin,"%s" ,parola_noua);
                             parola_noua[strlen(parola_noua)] = '\0';
-
-
                             cod_write = write(server_descriptor, &parola_noua, strlen(parola_noua));
                             if(cod_write == -1)
                             {
@@ -453,17 +438,118 @@ int main(int argc, char *argv[])
             }
             else
             {
-                printf("[client]Nu suntieti conectat la aplicatie.");
+                printf("[client]Nu suntieti conectat la aplicatie.\n");
             }
-        } else if(strstr(comanda, "afisare mesaje offline") == 0)
+        } else if(strcmp(comanda, "raspunde") == 0)
         {
-            if(conectat == false)
+            if(conectat == true)
+            {
+                memset(id_mesaj, 0, sizeof(id_mesaj));
+                printf("[client]Introduceti id-ul mesajului dorit pentru a raspunde: ");
+                fflush(stdout);
+                fgets(id_mesaj, sizeof(id_mesaj), stdin);
+                id_mesaj[strlen(id_mesaj)-1] = '\0';
+
+                cod_write = write(server_descriptor, &id_mesaj, strlen(id_mesaj));    
+                if(cod_write == -1)
+                {
+                    perror("[client]Eroare la write() catre server.\n");
+                    exit(EXIT_FAILURE);
+                }
+            }
+            else
             {
                 printf("[client]Nu sunteti conectat la aplicatie.\n");
+                fflush(stdout);
+            }
+
+        } else if(strcmp(comanda, "afisare data trimitere mesaj") == 0)
+        {
+            if(conectat == true)
+            {
+                memset(id_mesaj, 0, sizeof(id_mesaj));
+                printf("[client]Introduceti id-ul mesajului caruia doriti sa ii vedeti data trimiterii: ");
+                fflush(stdout);
+                fgets(id_mesaj, sizeof(id_mesaj), stdin);
+                id_mesaj[strlen(id_mesaj)-1] = '\0';
+
+                cod_write = write(server_descriptor, &id_mesaj, strlen(id_mesaj));    
+                if(cod_write == -1)
+                {
+                    perror("[client]Eroare la write() catre server.\n");
+                    exit(EXIT_FAILURE);
+                }
+            }
+            else
+            {
+                printf("[client]Nu sunteti conectat la aplicatie.");
+            }
+        } else if(strcmp(comanda, "afisare ora trimitere mesaj") == 0)
+        {
+            if(conectat == true)
+            {
+                memset(id_mesaj, 0, sizeof(id_mesaj));
+                printf("[client]Introduceti id-ul mesajului caruia doriti sa ii vedeti ora trimiterii: ");
+                fflush(stdout);
+                fgets(id_mesaj, sizeof(id_mesaj), stdin);
+                id_mesaj[strlen(id_mesaj)-1] = '\0';
+
+                cod_write = write(server_descriptor, &id_mesaj, strlen(id_mesaj));    
+                if(cod_write == -1)
+                {
+                    perror("[client]Eroare la write() catre server.\n");
+                    exit(EXIT_FAILURE);
+                }
+            }
+            else
+            {
+                printf("[client]Nu sunteti conectat la aplicatie.");
+            }
+        } else if(strcmp(comanda, "blocare") == 0)
+        {
+            if(conectat == true)
+            {
+                memset(nume_utilizator_blocat, 0, sizeof(nume_utilizator_blocat));
+                printf("[client]Introduceti numele utilizatorului pe care doriti sa il blocati: ");
+                fflush(stdout);
+                fgets(nume_utilizator_blocat, sizeof(nume_utilizator_blocat), stdin);
+                nume_utilizator_blocat[strlen(nume_utilizator_blocat)-1] = '\0';
+
+                cod_write = write(server_descriptor, &nume_utilizator_blocat, strlen(nume_utilizator_blocat));    
+                if(cod_write == -1)
+                {
+                    perror("[client]Eroare la write() catre server.\n");
+                    exit(EXIT_FAILURE);
+                }
+            }
+            else
+            {
+                printf("[client]Nu sunteti conectat la aplicatie.\n");
+                fflush(stdout);
+            }
+        } else if(strcmp(comanda, "deblocare") == 0)
+        {
+            if(conectat == true)
+            {
+                memset(nume_utilizator_blocat, 0, sizeof(nume_utilizator_blocat));
+                printf("[client]Introduceti numele utilizatorului pe care doriti sa il deblocati: ");
+                fflush(stdout);
+                fgets(nume_utilizator_blocat, sizeof(nume_utilizator_blocat), stdin);
+                nume_utilizator_blocat[strlen(nume_utilizator_blocat)-1] = '\0';
+
+                cod_write = write(server_descriptor, &nume_utilizator_blocat, strlen(nume_utilizator_blocat));    
+                if(cod_write == -1)
+                {
+                    perror("[client]Eroare la write() catre server.\n");
+                    exit(EXIT_FAILURE);
+                }
+            }
+            else
+            {
+                printf("[client]Nu sunteti conectat la aplicatie.\n");
+                fflush(stdout);
             }
         }
-        }
-
     }
     close(server_descriptor);
  }
@@ -472,7 +558,7 @@ int main(int argc, char *argv[])
 void *receptor(void *arg)
 {
     int server_descriptor = (int)arg;
-    char raspuns[100];
+    char raspuns[2000];
     int cod_read, cod_write;
     char mesaj[2000];
 
@@ -492,23 +578,19 @@ void *receptor(void *arg)
             printf("[server]%s\n", raspuns);
             fflush(stdout);
             conectat = false;
-            afisare = true;
         }
         else if(strcmp(raspuns, "Deconectare esuata. Nu sunteti conectat la aplicatie.") == 0)
         {
             printf("[server]%s", raspuns);
             fflush(stdout);
-            afisare = true;
         } else if(strcmp(raspuns, "Actualizarea parolei a reusit.") == 0)
         {
             printf("[server]%s\n", raspuns);
             fflush(stdout);            
-            afisare = true;
         } else if(strcmp(raspuns, "Utilizator gasit.") == 0)
         {
             printf("[server]%s\n", raspuns);
             fflush(stdout);
-            destinatar_gasit = false;
 
             printf("[client]Introduceti mesajul pe care doriti sa il trimiteti: ");
             fflush(stdout);
@@ -521,17 +603,88 @@ void *receptor(void *arg)
                 perror("[client]Eroare la write() de la client.\n");
                 exit(EXIT_FAILURE);
             }
-
         } else if(strcmp(raspuns, "Utilizatorul nu exista") == 0)
         {
             printf("[server]%s\n", raspuns);
             fflush(stdout);
-            destinatar_gasit = true;
-        }else if(strcmp(raspuns, "Numele de utilizator introdus nu exista in baza de date a aplicatiei.") == 0)
+        } else if(strcmp(raspuns, "Numele de utilizator introdus nu exista in baza de date a aplicatiei.") == 0)
         {
             printf("[server]Numele de utilizator introdus nu exista in baza de date a aplicatiei.");
-        }
-        else
+        } else if(strcmp(raspuns, "Id-ul introdus apartine unei conversatii care va apartine.") == 0)
+        {
+            memset(mesaj, 0, sizeof(mesaj));
+            printf("[client]Introduceti raspunsul: ");
+            fflush(stdout);
+            fgets(mesaj, sizeof(mesaj), stdin);
+            mesaj[strlen(mesaj) -1] = '\0';
+
+            cod_write = write(server_descriptor, &mesaj, strlen(mesaj));
+            if(cod_write == -1)
+            {
+                perror("[client]Eroare la write() de la client.\n");
+                exit(EXIT_FAILURE);
+            }
+        } else if(strstr(raspuns, "Nu puteti trimite mesaje utilizatorului") != NULL)
+        {
+            printf("[server]%s\n", raspuns);
+            fflush(stdout);
+        } else if(strcmp(raspuns, "Numele de utilizator introdus nu exista in baza de date a aplicatiei.") == 0)
+        {
+            printf("[server]%s\n", raspuns);
+            fflush(stdout);
+        } else if(strcmp(raspuns, "Id-ul introdus nu apartine unei conversatii care va apartine.") == 0)
+        {
+            printf("[server]%s\n", raspuns);
+            fflush(stdout);
+        } else if(strcmp(raspuns, "Id-ul introdus pentru afisarea datei trimiterii apartine unei conversatii care va apartine.") == 0)
+        {
+            printf("[server]%s\n", raspuns);
+            fflush(stdout);
+        } else if(strstr(raspuns, "Data trimiterii mesajului cu id-ul") != NULL)
+        {
+            printf("[server]%s\n", raspuns);
+            fflush(stdout);
+        } else if(strcmp(raspuns, "Id-ul introdus pentru afisarea datei trimiterii nu apartine unei conversatii care va apartine.") == 0)
+        {
+            printf("[server]%s\n", raspuns);
+            fflush(stdout);
+        } else if(strcmp(raspuns, "In baza de date, nu exista niciun mesaj caruia sa ii corespunda id-ul introdus de dumneavoastra.") == 0)
+        {
+            printf("[server]%s\n", raspuns);
+            fflush(stdout);
+        } else if(strcmp(raspuns, "Id-ul introdus pentru afisarea orei trimiterii apartine unei conversatii care va apartine.") == 0)
+        {
+            printf("[server]%s\n", raspuns);
+            fflush(stdout);
+        } else if(strstr(raspuns, "Ora trimiterii mesajului cu id-ul") != NULL)
+        {
+            printf("[server]%s\n", raspuns);
+            fflush(stdout);
+        } else if(strcmp(raspuns, "Id-ul introdus pentru afisarea orei trimiterii nu apartine unei conversatii care va apartine.") == 0)
+        {
+            printf("[server]%s\n", raspuns);
+            fflush(stdout);
+        } else if(strcmp(raspuns, "Blocare reusita.") == 0)
+        {
+            printf("[server]%s\n", raspuns);
+            fflush(stdout);
+        } else if(strcmp(raspuns, "Numele de utilizator introdus nu exista.") == 0)
+        {
+            printf("[server]%s\n", raspuns);
+            fflush(stdout);
+        } else if(strcmp(raspuns, "Deblocare reusita.") == 0)
+        {
+            printf("[server]%s\n", raspuns);
+            fflush(stdout);
+        } else if(strstr(raspuns, "Deblocare esuata.") != NULL)
+        {
+            printf("[server]%s\n", raspuns);
+            fflush(stdout);
+        } else if(strcmp(raspuns, "Numele de utilizator introdus nu exista.") == 0)
+        {
+            printf("[server]%s\n", raspuns);
+            fflush(stdout);
+        } else
         {
             printf("\n%s\n", raspuns);
             fflush(stdout);
